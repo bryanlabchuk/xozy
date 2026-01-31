@@ -27,7 +27,7 @@ function DeckRight({
         current16thNote={current16thNote}
       />
 
-      <div className="grid grid-cols-2 gap-[10px] mt-5">
+      <div className="grid grid-cols-2 gap-[10px] mt-8">
         <button 
           onClick={handleInject} 
           className={`${btnBase} bg-[var(--accent)] text-white`}

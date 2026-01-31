@@ -1,65 +1,52 @@
 /* =========================================
    XOZY-EP ENGINE v5.0 (TABBED & POLYSYNTH)
    ========================================= */
+import * as Tone from 'tone';
 
 export const FIXED_STEPS = 64;
 const PAD_NOTES = [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47];
 
 export function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
-// --- STANDALONE POLY SYNTH ENGINE ---
+// --- STANDALONE POLY SYNTH ENGINE (TONE.JS) ---
 class PolySynth {
-    constructor(audioCtx) {
-        this.ctx = audioCtx;
-        this.voices = {};
-        this.master = this.ctx.createGain();
-        this.master.gain.value = 0.3;
+    constructor() {
+        // Use Tone.PolySynth with MonoSynth to allow for filter usage per voice
+        this.synth = new Tone.PolySynth(Tone.MonoSynth, {
+            oscillator: { type: 'sawtooth' },
+            envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1 },
+            filterEnvelope: { attack: 0.02, decay: 0.1, sustain: 1, baseFrequency: 2500, octaves: 0 } 
+        });
 
         // Analog Flair: Stereo Delay Chain
-        this.delay = this.ctx.createDelay();
-        this.feedback = this.ctx.createGain();
-        this.delay.delayTime.value = 0.3;
-        this.feedback.gain.value = 0.3;
-
-        this.master.connect(this.ctx.destination);
-        this.master.connect(this.delay);
-        this.delay.connect(this.feedback);
-        this.feedback.connect(this.delay);
-        this.delay.connect(this.ctx.destination);
+        this.delay = new Tone.FeedbackDelay("8n", 0.3);
+        
+        this.synth.connect(this.delay);
+        this.delay.toDestination();
+        this.synth.toDestination();
     }
 
     play(freq) {
-        if (this.voices[freq]) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const vca = this.ctx.createGain();
-        const filter = this.ctx.createBiquadFilter();
-
         // Get live values from the UI
-        osc.type = document.getElementById('osc-type').value || 'sawtooth';
-        osc.frequency.value = freq;
-        filter.frequency.value = document.getElementById('syn-cutoff').value || 2500;
-        filter.Q.value = document.getElementById('syn-res').value || 1;
+        const oscType = document.getElementById('osc-type')?.value || 'sawtooth';
+        const cutoff = parseFloat(document.getElementById('syn-cutoff')?.value) || 2500;
+        const res = parseFloat(document.getElementById('syn-res')?.value) || 1;
+        const delayTime = parseFloat(document.getElementById('syn-delay')?.value) || 0.3;
 
-        vca.gain.setValueAtTime(0, now);
-        vca.gain.linearRampToValueAtTime(0.5, now + 0.02); // Attack
-
-        osc.connect(filter);
-        filter.connect(vca);
-        vca.connect(this.master);
+        this.synth.set({
+            oscillator: { type: oscType },
+            filter: { Q: res, frequency: cutoff }, // Direct frequency control requires 0 octaves on env
+            filterEnvelope: { baseFrequency: cutoff }
+        });
         
-        osc.start();
-        this.voices[freq] = { osc, vca };
+        // Update Delay
+        this.delay.delayTime.rampTo(delayTime, 0.1);
+        
+        this.synth.triggerAttack(freq);
     }
 
     stop(freq) {
-        if (this.voices[freq]) {
-            const now = this.ctx.currentTime;
-            const vca = this.voices[freq].vca;
-            vca.gain.exponentialRampToValueAtTime(0.001, now + 0.1); // Release
-            this.voices[freq].osc.stop(now + 0.15);
-            delete this.voices[freq];
-        }
+        this.synth.triggerRelease(freq);
     }
 }
 
@@ -154,11 +141,11 @@ export class SequencerEngine {
 
     async init() {
         try {
-            if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+            await Tone.start();
+            this.audioCtx = Tone.context.rawContext;
             
-            // Initialize Internal Synth
-            this.internalSynth = new PolySynth(this.audioCtx);
+            // Initialize Internal Synth (Tone.js wrapper)
+            this.internalSynth = new PolySynth();
 
             if (!navigator.requestMIDIAccess) {
                 this.log("READY (AUDIO ONLY - NO BROWSER MIDI)");
