@@ -27,6 +27,10 @@ class PolySynth {
     }
 
     play(freq) {
+        if (Tone.context.state !== 'running') {
+            Tone.start();
+        }
+
         // Get live values from the UI
         const oscType = document.getElementById('osc-type')?.value || 'sawtooth';
         const cutoff = parseFloat(document.getElementById('syn-cutoff')?.value) || 2500;
@@ -98,7 +102,7 @@ function applyInversion(intervals, inv) {
 export class SequencerEngine {
     constructor() {
         this.audioCtx = null;
-        this.internalSynth = null; 
+        this.internalSynth = new PolySynth(); 
         this.midiOut = null;
         this.isPlaying = false;
         this.nextNoteTime = 0.0;
@@ -144,8 +148,7 @@ export class SequencerEngine {
             await Tone.start();
             this.audioCtx = Tone.context.rawContext;
             
-            // Initialize Internal Synth (Tone.js wrapper)
-            this.internalSynth = new PolySynth();
+            // Internal Synth is already initialized in constructor
 
             if (!navigator.requestMIDIAccess) {
                 this.log("READY (AUDIO ONLY - NO BROWSER MIDI)");

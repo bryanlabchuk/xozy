@@ -51,7 +51,7 @@ function SynthTabContent({ engineRef }) {
                 blacks.push(
                     <div
                         key={midiNote}
-                        className="absolute bg-[#111] border border-white/10 shadow-md rounded-full cursor-pointer z-10 w-[3.2%] h-[90px] top-[5px]"
+                        className="absolute bg-[#111] border border-white/10 shadow-md rounded-full cursor-pointer z-10 w-[3.2%] h-[90px] top-[5px] pointer-events-auto"
                         style={{ left: leftPos }}
                         onMouseDown={play}
                         onMouseUp={stop}
@@ -67,7 +67,7 @@ function SynthTabContent({ engineRef }) {
                     {whites}
                 </div>
                 <div className="absolute inset-0 pointer-events-none">
-                    <div className="relative w-full h-full pointer-events-auto">
+                    <div className="relative w-full h-full">
                         {blacks}
                     </div>
                 </div>
