@@ -87,7 +87,7 @@ function SynthTabContent({ engineRef }) {
         <div className="w-full overflow-x-auto pb-[10px] mb-4">
             {renderKeys()}
         </div>
-        <div className="grid grid-cols-2 gap-[15px] items-end">
+        <div className="grid grid-cols-4 gap-[15px] items-end">
           <div>
             <label className={labelClass}>OSC SHAPE</label>
             <select className={selectClass} id="osc-type" defaultValue="sawtooth">
@@ -99,6 +99,11 @@ function SynthTabContent({ engineRef }) {
           <div><label className={labelClass}>CUTOFF</label><input type="range" className={knobClass} id="syn-cutoff" min="50" max="10000" defaultValue="2500" /></div>
           <div><label className={labelClass}>RESONANCE</label><input type="range" className={knobClass} id="syn-res" min="0" max="20" defaultValue="1" /></div>
           <div><label className={labelClass}>DELAY</label><input type="range" className={knobClass} id="syn-delay" min="0" max="0.9" step="0.1" defaultValue="0.3" /></div>
+        
+          <div><label className={labelClass}>ATTACK</label><input type="range" className={knobClass} id="syn-attack" min="0.01" max="2" step="0.01" defaultValue="0.02" /></div>
+          <div><label className={labelClass}>RELEASE</label><input type="range" className={knobClass} id="syn-release" min="0.1" max="4" step="0.1" defaultValue="1.0" /></div>
+          <div><label className={labelClass}>JUNO CHORUS</label><input type="range" className={knobClass} id="syn-chorus" min="0" max="1" step="0.1" defaultValue="0" /></div>
+          <div><label className={labelClass}>VIBRATO (LFO)</label><input type="range" className={knobClass} id="syn-lfo" min="0" max="1" step="0.05" defaultValue="0" /></div>
         </div>
       </div>
     </div>

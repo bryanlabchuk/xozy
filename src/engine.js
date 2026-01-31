@@ -18,12 +18,19 @@ class PolySynth {
             filterEnvelope: { attack: 0.02, decay: 0.1, sustain: 1, baseFrequency: 2500, octaves: 0 } 
         });
 
-        // Analog Flair: Stereo Delay Chain
+        // Analog Flair: Stereo Delay Chain & Chorus (Juno-style)
         this.delay = new Tone.FeedbackDelay("8n", 0.3);
+        this.chorus = new Tone.Chorus(4, 2.5, 0.5).start();
+        this.vibrato = new Tone.Vibrato(5, 0);
         
-        this.synth.connect(this.delay);
+        // Signal Routing: Synth -> Vibrato -> Chorus -> Destination
+        //                 Synth -> Vibrato -> Delay -> Destination (Parallel)
+        this.synth.connect(this.vibrato);
+        this.vibrato.connect(this.chorus);
+        this.vibrato.connect(this.delay);
+        
+        this.chorus.toDestination();
         this.delay.toDestination();
-        this.synth.toDestination();
     }
 
     play(freq) {
@@ -35,17 +42,50 @@ class PolySynth {
         const oscType = document.getElementById('osc-type')?.value || 'sawtooth';
         const cutoff = parseFloat(document.getElementById('syn-cutoff')?.value) || 2500;
         const res = parseFloat(document.getElementById('syn-res')?.value) || 1;
+        
+        const attack = parseFloat(document.getElementById('syn-attack')?.value) || 0.02;
+        const release = parseFloat(document.getElementById('syn-release')?.value) || 1.0;
+        
         const delayTime = parseFloat(document.getElementById('syn-delay')?.value) || 0.3;
+        const chorusAmt = parseFloat(document.getElementById('syn-chorus')?.value) || 0.0;
+        const lfoDepth = parseFloat(document.getElementById('syn-lfo')?.value) || 0.0;
 
         this.synth.set({
             oscillator: { type: oscType },
             filter: { Q: res, frequency: cutoff }, // Direct frequency control requires 0 octaves on env
-            filterEnvelope: { baseFrequency: cutoff }
+            filterEnvelope: { baseFrequency: cutoff },
+            envelope: { attack: attack, release: release }
         });
         
-        // Update Delay
+        // Update Effects
         this.delay.delayTime.rampTo(delayTime, 0.1);
+        this.chorus.wet.rampTo(chorusAmt, 0.1);
+        this.vibrato.depth.rampTo(lfoDepth, 0.1);
         
+        this.synth.triggerAttack(freq);
+    }
+
+    stop(freq) {
+        this.synth.triggerRelease(freq);
+    }
+}
+
+// --- DRUM MACHINE ENGINE ---
+class DrumMachine {
+    constructor() {
+        // Percussive Synth Config
+        this.synth = new Tone.PolySynth(Tone.MembraneSynth, {
+            pitchDecay: 0.05,
+            octaves: 4,
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.5 }
+        }).toDestination();
+        
+        // Add a bit of noise for texture on higher notes (optional, keep simple for now)
+    }
+
+    play(freq) {
+        if (Tone.context.state !== 'running') Tone.start();
         this.synth.triggerAttack(freq);
     }
 
@@ -103,6 +143,7 @@ export class SequencerEngine {
     constructor() {
         this.audioCtx = null;
         this.internalSynth = new PolySynth(); 
+        this.drumSynth = new DrumMachine();
         this.midiOut = null;
         this.isPlaying = false;
         this.nextNoteTime = 0.0;
@@ -145,43 +186,98 @@ export class SequencerEngine {
 
     async init() {
         try {
+            console.log("--- MIDI INITIALIZATION START ---");
             await Tone.start();
             this.audioCtx = Tone.context.rawContext;
+            console.log("Audio Context State:", Tone.context.state);
             
-            // Internal Synth is already initialized in constructor
-
             if (!navigator.requestMIDIAccess) {
                 this.log("READY (AUDIO ONLY - NO BROWSER MIDI)");
+                console.warn("Web MIDI API not supported in this browser.");
                 return true;
             }
             const m = await navigator.requestMIDIAccess({ sysex: false });
+            
+            // --- INPUT SETUP ---
+            const inputs = Array.from(m.inputs.values());
+            console.log("MIDI Inputs Found:", inputs.map(i => i.name));
+            if (inputs.length > 0) {
+                inputs.forEach(input => {
+                    this.log(`IN: ${input.name}`);
+                    input.onmidimessage = this.handleMidiMessage.bind(this);
+                });
+            } else {
+                this.log("NO MIDI INPUTS FOUND");
+            }
+
+            // --- OUTPUT SETUP ---
             const outs = Array.from(m.outputs.values());
+            console.log("MIDI Outputs Found:", outs.map(o => o.name));
             
             if (outs.length === 0) {
-                 this.log("READY (AUDIO ONLY - NO DEVICES)");
+                 this.log("READY (AUDIO ONLY - NO OUTPUTS)");
                  return true;
             }
 
-            // FILTER: Try to find specific devices, but fallback to index 0
             const preferred = outs.find(o => {
                 const n = (o.name || '').toLowerCase();
                 return n.includes('ep-') || n.includes('teenage') || n.includes('op-') || n.includes('133');
             });
             
-            // FALLBACK LOGIC: If no specific device found, take the first one
             this.midiOut = preferred || outs[0]; 
             
             if (this.midiOut) {
                 this.log(`LINKED: ${this.midiOut.name}`);
-                // Send a test signal (Stop Msg) to confirm connection
+                console.log("Selected MIDI Output:", this.midiOut.name);
                 this.midiOut.send([0xFC]); 
-            } else {
-                this.log("READY (AUDIO ONLY)");
             }
+            console.log("--- MIDI INITIALIZATION COMPLETE ---");
             return true;
         } catch (e) {
             this.log(`ERR: ${e.message}`);
+            console.error("MIDI Init Error:", e);
             return false;
+        }
+    }
+
+    handleMidiMessage(event) {
+        const [status, data1, data2] = event.data;
+        
+        // IGNORE SYSTEM REALTIME MESSAGES (Clock 248, Active Sensing 254, etc.)
+        // These will spam the console and aren't needed for notes/CC.
+        if (status >= 240) return;
+
+        if (Tone.context.state !== 'running') {
+            console.log("Resuming Tone.js context via MIDI message...");
+            Tone.start();
+        }
+
+        const command = status & 0xF0;
+        
+        // Debug Log for Voice/Control MIDI only
+        console.log(`MIDI RX: [${status}, ${data1}, ${data2}] | CMD: ${command}`);
+
+        if (command === 144 && data2 > 0) {
+            const freq = 440 * Math.pow(2, (data1 - 69) / 12);
+            console.log(`NOTE ON: ${data1} | Freq: ${freq.toFixed(2)}Hz | Vel: ${data2}`);
+            this.internalSynth.play(freq);
+        } else if (command === 128 || (command === 144 && data2 === 0)) {
+            const freq = 440 * Math.pow(2, (data1 - 69) / 12);
+            console.log(`NOTE OFF: ${data1}`);
+            this.internalSynth.stop(freq);
+        } else if (command === 176) {
+            console.log(`CC CHANGE: CC#${data1} Value: ${data2}`);
+            if (data1 === 74) {
+                const val = 50 + ((data2 / 127) * 9950);
+                const el = document.getElementById('syn-cutoff');
+                if (el) el.value = val;
+                if (this.internalSynth && this.internalSynth.synth) {
+                     this.internalSynth.synth.set({
+                        filter: { frequency: val },
+                        filterEnvelope: { baseFrequency: val }
+                    });
+                }
+            }
         }
     }
 
@@ -276,7 +372,11 @@ export class SequencerEngine {
                             this.midiOut.send([0x80 + g, pad.midiNote, 0], baseMidiTime + pad.gateMs);
                         }
                         // Trigger Internal Audio
-                        if (this.internalSynth) {
+                        if (pad.mode === 'drum' && this.drumSynth) {
+                            const freq = 440 * Math.pow(2, (pad.midiNote - 69) / 12);
+                            this.drumSynth.play(freq);
+                            setTimeout(() => this.drumSynth.stop(freq), pad.gateMs);
+                        } else if (this.internalSynth) {
                             const freq = 440 * Math.pow(2, (pad.midiNote - 69) / 12);
                             this.internalSynth.play(freq);
                             setTimeout(() => this.internalSynth.stop(freq), pad.gateMs);
@@ -306,6 +406,8 @@ export class SequencerEngine {
         const fluxVal = pad.chord.flux / 100;
         let effectiveInv = pad.chord.inv;
         
+        // console.log(`[CHORD] Base: ${baseNote} | Q: ${pad.chord.quality} | Int: ${intervals}`);
+
         if (fluxVal > 0 && Math.random() < fluxVal) {
             if (Math.random() > 0.5) effectiveInv = (effectiveInv + 1) % 4;
             if (fluxVal > 0.6 && Math.random() > 0.8) baseNote += (Math.random() > 0.5 ? 12 : -12);
@@ -321,8 +423,13 @@ export class SequencerEngine {
             
             // Trigger MIDI
             if (this.midiOut) {
-                this.midiOut.send([noteOn, noteNum, velVar], time + strumDelay);
-                this.midiOut.send([noteOff, noteNum, 0], time + strumDelay + pad.gateMs);
+                // console.log(`[MIDI CHORD] Sending Note: ${noteNum} Vel: ${velVar} Time: ${time + strumDelay}`);
+                try {
+                    this.midiOut.send([noteOn, noteNum, velVar], time + strumDelay);
+                    this.midiOut.send([noteOff, noteNum, 0], time + strumDelay + pad.gateMs);
+                } catch (e) {
+                    console.error("MIDI Send Error:", e);
+                }
             }
             
             // Trigger Internal Audio

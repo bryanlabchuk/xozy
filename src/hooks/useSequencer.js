@@ -129,6 +129,7 @@ function useSequencer() {
             newData[group][pad][key] = value;
         }
       }
+      if (engineRef.current) engineRef.current.projectData = newData;
       return newData;
     });
   }, []);
@@ -140,6 +141,7 @@ function useSequencer() {
       if (newData[group] && newData[group][pad] && newData[group][pad].notes) {
         newData[group][pad].notes[stepIndex] = newNoteChar;
       }
+      if (engineRef.current) engineRef.current.projectData = newData;
       return newData;
     });
   }, []);
@@ -150,6 +152,7 @@ function useSequencer() {
       setProjectData(prevData => {
         const newData = JSON.parse(JSON.stringify(prevData));
         newData[activeGroup][selectedPad].notes.fill('O');
+        if (engineRef.current) engineRef.current.projectData = newData;
         return newData;
       });
       engineRef.current.log("PAD CLEARED");

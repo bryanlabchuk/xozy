@@ -38,6 +38,7 @@ function DeckRight({
         <button 
           onClick={stopSequencer} 
           className={`${btnBase} bg-[#333] text-white`}
+          id="stop-btn"
         >
           STOP / PANIC
         </button>

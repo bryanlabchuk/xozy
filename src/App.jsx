@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 import Header from './components/Header.jsx';
 import LCD from './components/LCD.jsx';
 import DeckLeft from './components/DeckLeft.jsx';
@@ -30,6 +31,10 @@ function App() {
     logMessages,
   } = useSequencer();
 
+  const applyThemeToBody = (theme) => {
+    document.body.className = (theme !== 'auto') ? `theme-${theme}` : '';
+  };
+
   useEffect(() => {
     const savedTheme = localStorage.getItem('oxo_theme') || 'auto';
     setCurrentTheme(savedTheme);
@@ -38,22 +43,6 @@ function App() {
       setIsDarkMode(true);
     }
   }, []);
-
-  useEffect(() => {
-    applyThemeToBody(currentTheme);
-  }, [currentTheme]);
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-  }, [isDarkMode]);
-
-  const applyThemeToBody = (theme) => {
-    document.body.className = (theme !== 'auto') ? `theme-${theme}` : '';
-  };
 
   const setThemeOverride = (value) => {
     localStorage.setItem('oxo_theme', value);
