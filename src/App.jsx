@@ -1,35 +1,121 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import Header from './components/Header.jsx';
+import LCD from './components/LCD.jsx';
+import DeckLeft from './components/DeckLeft.jsx';
+import DeckRight from './components/DeckRight.jsx';
+import useSequencer from './hooks/useSequencer.js';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('auto');
+  const [isSkinnyMode, setIsSkinnyMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('drum');
+
+  const {
+    engineRef,
+    initMidi,
+    handleInject,
+    stopSequencer,
+    isPlaying,
+    bpm, setEngineBPM,
+    swing, setEngineSwing,
+    globalBars, setEngineGlobalBars,
+    activeGroup, setEngineActiveGroup,
+    selectedPad, setEngineSelectedPad,
+    current16thNote,
+    projectData,
+    updatePadData,
+    updatePadStep,
+    clearCurrentPadPattern,
+    logMessages,
+  } = useSequencer();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('oxo_theme') || 'auto';
+    setCurrentTheme(savedTheme);
+    applyThemeToBody(savedTheme);
+    if (document.body.classList.contains('dark-mode')) {
+      setIsDarkMode(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    applyThemeToBody(currentTheme);
+  }, [currentTheme]);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [isDarkMode]);
+
+  const applyThemeToBody = (theme) => {
+    document.body.className = (theme !== 'auto') ? `theme-${theme}` : '';
+  };
+
+  const setThemeOverride = (value) => {
+    localStorage.setItem('oxo_theme', value);
+    setCurrentTheme(value);
+  };
+
+  const toggleDark = () => setIsDarkMode(prev => !prev);
+  const toggleLayout = () => setIsSkinnyMode(prev => !prev);
+
+  // Dynamic layout classes
+  const chassisClasses = `
+    mx-auto my-5 p-6 rounded-xl border-2 border-[var(--border)]
+    bg-[var(--panel-bg)] shadow-[20px_20px_60px_rgba(0,0,0,0.3)] 
+    backdrop-blur-md transition-[max-width] duration-400 ease-in-out
+    w-[95%] ${isSkinnyMode ? 'max-w-[480px]' : 'max-w-[1100px]'}
+  `;
+
+  const deckClasses = `
+    grid gap-10
+    ${isSkinnyMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-[1fr_1.4fr]'}
+  `;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className={chassisClasses}>
+      <Header
+        currentTheme={currentTheme}
+        setThemeOverride={setThemeOverride}
+        toggleDark={toggleDark}
+        toggleLayout={toggleLayout}
+      />
+
+      <LCD logMessages={logMessages} />
+
+      <div className={deckClasses}>
+        <DeckLeft
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          initMidi={initMidi}
+          engineRef={engineRef}
+          bpm={bpm} setEngineBPM={setEngineBPM}
+          swing={swing} setEngineSwing={setEngineSwing}
+          globalBars={globalBars} setEngineGlobalBars={setEngineGlobalBars}
+          activeGroup={activeGroup} setEngineActiveGroup={setEngineActiveGroup}
+          selectedPad={selectedPad} setEngineSelectedPad={setEngineSelectedPad}
+          projectData={projectData}
+          updatePadData={updatePadData}
+        />
+
+        <DeckRight
+          engineRef={engineRef}
+          handleInject={handleInject}
+          stopSequencer={stopSequencer}
+          clearCurrentPadPattern={clearCurrentPadPattern}
+          activeGroup={activeGroup}
+          selectedPad={selectedPad}
+          projectData={projectData}
+          updatePadStep={updatePadStep}
+          current16thNote={current16thNote}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
