@@ -64,12 +64,7 @@ function App() {
   const toggleLayout = () => setIsSkinnyMode(prev => !prev);
 
   return (
-    <div className={`
-      bg-[var(--panel-bg)] border-2 border-[var(--border)] rounded-xl
-      p-6 w-[95%] shadow-[20px_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-[10px]
-      my-5 mx-auto transition-[max-width] duration-400 ease-in-out
-      ${isSkinnyMode ? 'max-w-[480px]' : 'max-w-[1100px]'}
-    `}>
+    <div className={`chassis ${isSkinnyMode ? 'skinny-mode' : ''}`}>
       <Header
         currentTheme={currentTheme}
         setThemeOverride={setThemeOverride}
@@ -79,7 +74,7 @@ function App() {
 
       <LCD logMessages={logMessages} />
 
-      <div className={`grid gap-10 ${isSkinnyMode ? 'grid-cols-1' : 'grid-cols-[1fr_1.4fr]'}`}>
+      <div className="main-deck">
         <DeckLeft
           activeTab={activeTab}
           setActiveTab={setActiveTab}

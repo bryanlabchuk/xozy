@@ -13,10 +13,10 @@ function DeckRight({
   current16thNote 
 }) {
 
-  const btnMain = "w-full p-[18px] font-black cursor-pointer rounded border-none uppercase tracking-[1px]";
+  const btnBase = "w-full p-[18px] font-black cursor-pointer rounded-[4px] uppercase tracking-[1px] border-none text-[var(--bg)]";
 
   return (
-    <div>
+    <div className="deck-right">
       <EditorPanel 
         engineRef={engineRef}
         activeGroup={activeGroup}
@@ -30,14 +30,14 @@ function DeckRight({
       <div className="grid grid-cols-2 gap-[10px] mt-5">
         <button 
           onClick={handleInject} 
-          className={`${btnMain} bg-[var(--accent)] text-white`}
+          className={`${btnBase} bg-[var(--accent)] text-white`}
           id="inject-btn"
         >
           INJECT / START
         </button>
         <button 
           onClick={stopSequencer} 
-          className={`${btnMain} bg-[#333] text-white`}
+          className={`${btnBase} bg-[#333] text-white`}
         >
           STOP / PANIC
         </button>
