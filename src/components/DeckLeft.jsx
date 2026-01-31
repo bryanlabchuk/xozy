@@ -14,7 +14,7 @@ function DeckLeft({
   return (
     <div className="deck-left">
       <button 
-        className="btn-main w-full p-[18px] font-black cursor-pointer rounded-[4px] uppercase tracking-[1px] mb-5 bg-[var(--accent)] text-white border-none" 
+        className="w-full p-[18px] font-black cursor-pointer rounded border-none uppercase tracking-[1px] mb-5 bg-[var(--accent)] text-white" 
         id="init-btn" 
         onClick={initMidi}
       >

@@ -75,7 +75,7 @@ function DrumTabContent({
       </div>
 
       <div className="grid grid-cols-[45px_1fr] gap-5">
-        <div className="flex flex-col gap-[6px]">
+        <div className="flex flex-col gap-[6px] justify-end">
           {['A', 'B', 'C', 'D'].map((groupName, index) => (
             <button
               key={index}

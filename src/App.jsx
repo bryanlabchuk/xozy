@@ -63,21 +63,13 @@ function App() {
   const toggleDark = () => setIsDarkMode(prev => !prev);
   const toggleLayout = () => setIsSkinnyMode(prev => !prev);
 
-  // Dynamic layout classes
-  const chassisClasses = `
-    mx-auto my-5 p-6 rounded-xl border-2 border-[var(--border)]
-    bg-[var(--panel-bg)] shadow-[20px_20px_60px_rgba(0,0,0,0.3)] 
-    backdrop-blur-md transition-[max-width] duration-400 ease-in-out
-    w-[95%] ${isSkinnyMode ? 'max-w-[480px]' : 'max-w-[1100px]'}
-  `;
-
-  const deckClasses = `
-    grid gap-10
-    ${isSkinnyMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-[1fr_1.4fr]'}
-  `;
-
   return (
-    <div className={chassisClasses}>
+    <div className={`
+      bg-[var(--panel-bg)] border-2 border-[var(--border)] rounded-xl
+      p-6 w-[95%] shadow-[20px_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-[10px]
+      my-5 mx-auto transition-[max-width] duration-400 ease-in-out
+      ${isSkinnyMode ? 'max-w-[480px]' : 'max-w-[1100px]'}
+    `}>
       <Header
         currentTheme={currentTheme}
         setThemeOverride={setThemeOverride}
@@ -87,7 +79,7 @@ function App() {
 
       <LCD logMessages={logMessages} />
 
-      <div className={deckClasses}>
+      <div className={`grid gap-10 ${isSkinnyMode ? 'grid-cols-1' : 'grid-cols-[1fr_1.4fr]'}`}>
         <DeckLeft
           activeTab={activeTab}
           setActiveTab={setActiveTab}
