@@ -160,6 +160,7 @@ export class SequencerEngine {
         this.onStepTrigger = null;
         this.onClockTick = null;
         this.onLog = null;
+        this.activeTab = 'drum'; // Default to drum
 
         this.projectData = Array.from({ length: 4 }, () =>
             Array.from({ length: 12 }, (_, p) => ({
@@ -185,17 +186,35 @@ export class SequencerEngine {
     }
 
     async init() {
+        // 1. Audio Context Initialization
         try {
-            console.log("--- MIDI INITIALIZATION START ---");
-            await Tone.start();
+            console.log("--- AUDIO INITIALIZATION START ---");
+            // Set lookAhead to 0 for immediate scheduling (low latency)
+            // Note: latencyHint cannot be reliably changed on an existing AudioContext in all browsers without recreating it.
+            // We rely on the browser's default or Tone's default.
+            Tone.context.lookAhead = 0; 
+
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+            }
             this.audioCtx = Tone.context.rawContext;
             console.log("Audio Context State:", Tone.context.state);
-            
+        } catch (e) {
+            this.log(`AUDIO ERR: ${e.message}`);
+            console.error("Audio Init Error:", e);
+            // We continue even if audio fails, to try MIDI? No, usually audio is needed for timing.
+            // But let's proceed to MIDI anyway.
+        }
+
+        // 2. MIDI Initialization
+        try {
+            console.log("--- MIDI INITIALIZATION START ---");
             if (!navigator.requestMIDIAccess) {
-                this.log("READY (AUDIO ONLY - NO BROWSER MIDI)");
-                console.warn("Web MIDI API not supported in this browser.");
+                this.log("OFFLINE: NO WEB MIDI");
+                console.warn("Web MIDI API not supported.");
                 return true;
             }
+
             const m = await navigator.requestMIDIAccess({ sysex: false });
             
             // --- INPUT SETUP ---
@@ -207,7 +226,7 @@ export class SequencerEngine {
                     input.onmidimessage = this.handleMidiMessage.bind(this);
                 });
             } else {
-                this.log("NO MIDI INPUTS FOUND");
+                this.log("NO MIDI INPUTS");
             }
 
             // --- OUTPUT SETUP ---
@@ -215,13 +234,20 @@ export class SequencerEngine {
             console.log("MIDI Outputs Found:", outs.map(o => o.name));
             
             if (outs.length === 0) {
-                 this.log("READY (AUDIO ONLY - NO OUTPUTS)");
+                 this.log("OFFLINE: NO MIDI OUTS");
                  return true;
             }
 
+            // Prefer Teenage Engineering (and EP-style) devices for MIDI out
+            const TE_DEVICE_PATTERNS = [
+                'teenage', 'ep-', 'ep133', 'op-', 'op-1', 'op-2', 'op-z', 'opz', 'op-133',
+                'tx-6', 'tx6',   // TE mixer
+                'po-', 'po-32', 'po-33', 'po-35',  // Pocket Operators (if they expose MIDI)
+                'ko ii', 'ko2',  // EP-133 KO II
+            ];
             const preferred = outs.find(o => {
                 const n = (o.name || '').toLowerCase();
-                return n.includes('ep-') || n.includes('teenage') || n.includes('op-') || n.includes('133');
+                return TE_DEVICE_PATTERNS.some(p => n.includes(p));
             });
             
             this.midiOut = preferred || outs[0]; 
@@ -229,14 +255,19 @@ export class SequencerEngine {
             if (this.midiOut) {
                 this.log(`LINKED: ${this.midiOut.name}`);
                 console.log("Selected MIDI Output:", this.midiOut.name);
-                this.midiOut.send([0xFC]); 
+                // Send stop to reset
+                try {
+                    this.midiOut.send([0xFC]); 
+                } catch(err) {
+                    console.warn("Failed to send initial stop:", err);
+                }
             }
             console.log("--- MIDI INITIALIZATION COMPLETE ---");
             return true;
         } catch (e) {
-            this.log(`ERR: ${e.message}`);
+            this.log(`MIDI ERR: ${e.message}`);
             console.error("MIDI Init Error:", e);
-            return false;
+            return false; // Return false to indicate partial/full failure
         }
     }
 
@@ -255,15 +286,18 @@ export class SequencerEngine {
         const command = status & 0xF0;
         
         // Debug Log for Voice/Control MIDI only
-        console.log(`MIDI RX: [${status}, ${data1}, ${data2}] | CMD: ${command}`);
+        // console.log(`MIDI RX: [${status}, ${data1}, ${data2}] | CMD: ${command}`);
+
+        // Only trigger Synth if we are in Synth Mode
+        if (this.activeTab !== 'synth') return;
 
         if (command === 144 && data2 > 0) {
             const freq = 440 * Math.pow(2, (data1 - 69) / 12);
-            console.log(`NOTE ON: ${data1} | Freq: ${freq.toFixed(2)}Hz | Vel: ${data2}`);
+            // console.log(`NOTE ON: ${data1} | Freq: ${freq.toFixed(2)}Hz | Vel: ${data2}`);
             this.internalSynth.play(freq);
         } else if (command === 128 || (command === 144 && data2 === 0)) {
             const freq = 440 * Math.pow(2, (data1 - 69) / 12);
-            console.log(`NOTE OFF: ${data1}`);
+            // console.log(`NOTE OFF: ${data1}`);
             this.internalSynth.stop(freq);
         } else if (command === 176) {
             console.log(`CC CHANGE: CC#${data1} Value: ${data2}`);
@@ -371,16 +405,9 @@ export class SequencerEngine {
                             this.midiOut.send([0x90 + g, pad.midiNote, velOut], baseMidiTime);
                             this.midiOut.send([0x80 + g, pad.midiNote, 0], baseMidiTime + pad.gateMs);
                         }
-                        // Trigger Internal Audio
-                        if (pad.mode === 'drum' && this.drumSynth) {
-                            const freq = 440 * Math.pow(2, (pad.midiNote - 69) / 12);
-                            this.drumSynth.play(freq);
-                            setTimeout(() => this.drumSynth.stop(freq), pad.gateMs);
-                        } else if (this.internalSynth) {
-                            const freq = 440 * Math.pow(2, (pad.midiNote - 69) / 12);
-                            this.internalSynth.play(freq);
-                            setTimeout(() => this.internalSynth.stop(freq), pad.gateMs);
-                        }
+                        // Internal Audio Preview for Drums is DISABLED per user requirement.
+                        // Note: 'chord' mode is handled by triggerChord above (MIDI only).
+                        // PolySynth is NOT triggered by the sequencer.
                     }
                     if (this.onStepTrigger) setTimeout(() => this.onStepTrigger(g, p), (baseMidiTime - performance.now()));
                 }
@@ -432,14 +459,8 @@ export class SequencerEngine {
                 }
             }
             
-            // Trigger Internal Audio
-            if (this.internalSynth) {
-                const freq = 440 * Math.pow(2, (noteNum - 69) / 12);
-                setTimeout(() => {
-                    this.internalSynth.play(freq);
-                    setTimeout(() => this.internalSynth.stop(freq), pad.gateMs);
-                }, strumDelay);
-            }
+            // Internal Audio for Chords is DISABLED per user requirement.
+            // Chord mode is strictly for controlling external EP device polyphony.
         });
     }
 }
