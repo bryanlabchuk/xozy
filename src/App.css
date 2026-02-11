@@ -21,15 +21,8 @@
 
 .main-deck {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
   gap: 20px;
-}
-
-/* On mobile/narrow screens, stack them */
-@media (max-width: 900px) {
-  .main-deck {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Panel Styling (Left & Right Decks) */

@@ -2,17 +2,17 @@ import React from 'react';
 
 function Header({ currentTheme, setThemeOverride, toggleDark, toggleLayout }) {
   // Common styles for the select and buttons in the header
-  const btnLayoutClass = "w-full p-2 bg-[var(--bg)] border border-[var(--text)] color-[var(--text)] font-bold text-[0.75rem] rounded-[2px] cursor-pointer hover:opacity-80 transition-opacity";
+  const btnBaseClass = "p-2 bg-[var(--bg)] border border-[var(--text)] text-[var(--text)] font-bold text-[0.7rem] rounded-[2px] cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap overflow-hidden text-ellipsis";
 
   return (
-    <div className="flex justify-between items-center mb-5">
+    <div className="flex flex-wrap justify-between items-center mb-5 gap-4">
       <h1 className="m-0 text-[1.2rem] tracking-[4px] font-black uppercase">
         XOZY-EP
       </h1>
-      <div className="flex gap-2">
+      <div className="flex flex-1 max-w-[500px] gap-2">
         <select 
           id="theme-select" 
-          className={btnLayoutClass} 
+          className={`${btnBaseClass} flex-1 min-w-0`}
           onChange={(e) => setThemeOverride(e.target.value)} 
           value={currentTheme}
         >
@@ -24,12 +24,12 @@ function Header({ currentTheme, setThemeOverride, toggleDark, toggleLayout }) {
         <button 
           id="dark-btn" 
           onClick={toggleDark} 
-          className={btnLayoutClass}
+          className={`${btnBaseClass} px-4`}
         >
           NIGHT
         </button>
         <button 
-          className={btnLayoutClass} 
+          className={`${btnBaseClass} px-3`}
           onClick={toggleLayout} 
           title="Compact Mode"
         >

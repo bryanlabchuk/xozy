@@ -117,6 +117,12 @@ function useSequencer() {
     }
   }, []);
 
+  const setEngineActiveTab = useCallback((tab) => {
+      if (engineRef.current) {
+          engineRef.current.activeTab = tab;
+      }
+  }, []);
+
   // Function to update a specific pad's properties and trigger a re-render
   const updatePadData = useCallback((group, pad, key, value) => {
     setProjectData(prevData => {
@@ -159,6 +165,41 @@ function useSequencer() {
     }
   }, [activeGroup, selectedPad, projectData]);
 
+  const loadPadPattern = useCallback((group, pad, patternString) => {
+    const cleanPat = patternString.replace(/\s/g, '');
+    setProjectData(prevData => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      if (newData[group] && newData[group][pad]) {
+          for (let i = 0; i < 64; i++) {
+               newData[group][pad].notes[i] = cleanPat[i % cleanPat.length] || 'O';
+          }
+      }
+      if (engineRef.current) engineRef.current.projectData = newData;
+      return newData;
+    });
+    if (engineRef.current) engineRef.current.log("PATTERN LOADED");
+  }, []);
+
+  const loadKit = useCallback((kitData) => {
+    setProjectData(prevData => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      // Iterate through tracks in the kit (e.g. 0, 1, 2)
+      for (const [padIndex, patternStr] of Object.entries(kitData.tracks)) {
+          const pIdx = parseInt(padIndex, 10);
+          // Apply to the active group
+          if (newData[activeGroup] && newData[activeGroup][pIdx]) {
+               const cleanPat = patternStr.replace(/\s/g, '');
+               for (let i = 0; i < 64; i++) {
+                   newData[activeGroup][pIdx].notes[i] = cleanPat[i % cleanPat.length] || 'O';
+               }
+          }
+      }
+      if (engineRef.current) engineRef.current.projectData = newData;
+      return newData;
+    });
+    if (engineRef.current) engineRef.current.log(`KIT LOADED: ${kitData.name}`);
+  }, [activeGroup]);
+
 
   return {
     engineRef,
@@ -171,11 +212,14 @@ function useSequencer() {
     globalBars, setEngineGlobalBars,
     activeGroup, setEngineActiveGroup,
     selectedPad, setEngineSelectedPad,
+    setEngineActiveTab,
     current16thNote,
     projectData,
     updatePadData,
     updatePadStep,
     clearCurrentPadPattern,
+    loadPadPattern,
+    loadKit,
     logMessages,
   };
 }

@@ -31,16 +31,8 @@ function PadGrid({ engineRef, activeGroup, selectedPad, setEngineSelectedPad, pr
       }
     }
     
-    // Internal Audio Triggering with Separation
-    const freq = 440 * Math.pow(2, (pad.midiNote - 69) / 12);
-    
-    if (pad.mode === 'drum' && engineRef.current.drumSynth) {
-         engineRef.current.drumSynth.play(freq);
-         setTimeout(() => engineRef.current.drumSynth.stop(freq), pad.gateMs);
-    } else if (engineRef.current.internalSynth) {
-         engineRef.current.internalSynth.play(freq);
-         setTimeout(() => engineRef.current.internalSynth.stop(freq), pad.gateMs);
-    }
+    // Internal Audio Preview for Pads is DISABLED per user requirement.
+    // Pads only send MIDI data to the external device.
   };
 
   return (

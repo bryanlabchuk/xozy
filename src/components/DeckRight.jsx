@@ -6,6 +6,8 @@ function DeckRight({
   handleInject, 
   stopSequencer, 
   clearCurrentPadPattern, 
+  loadPadPattern,
+  loadKit,
   activeGroup, 
   selectedPad, 
   projectData, 
@@ -24,6 +26,8 @@ function DeckRight({
         projectData={projectData}
         updatePadStep={updatePadStep}
         clearCurrentPadPattern={clearCurrentPadPattern}
+        loadPadPattern={loadPadPattern}
+        loadKit={loadKit}
         current16thNote={current16thNote}
       />
 

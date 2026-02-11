@@ -23,25 +23,36 @@ function App() {
     globalBars, setEngineGlobalBars,
     activeGroup, setEngineActiveGroup,
     selectedPad, setEngineSelectedPad,
+    setEngineActiveTab,
     current16thNote,
     projectData,
     updatePadData,
     updatePadStep,
     clearCurrentPadPattern,
+    loadPadPattern,
+    loadKit,
     logMessages,
   } = useSequencer();
 
-  const applyThemeToBody = (theme) => {
-    document.body.className = (theme !== 'auto') ? `theme-${theme}` : '';
-  };
+  useEffect(() => {
+    // 1. Get Base Class (Theme)
+    const baseClass = (currentTheme !== 'auto') ? `theme-${currentTheme}` : '';
+    
+    // 2. Set Body Class (Overwrites existing to ensure clean state)
+    document.body.className = baseClass;
+
+    // 3. Append Dark Mode if active
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    }
+  }, [currentTheme, isDarkMode]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('oxo_theme') || 'auto';
+    const savedDark = localStorage.getItem('oxo_dark_mode') === 'true';
+    
     setCurrentTheme(savedTheme);
-    applyThemeToBody(savedTheme);
-    if (document.body.classList.contains('dark-mode')) {
-      setIsDarkMode(true);
-    }
+    setIsDarkMode(savedDark);
   }, []);
 
   const setThemeOverride = (value) => {
@@ -49,7 +60,13 @@ function App() {
     setCurrentTheme(value);
   };
 
-  const toggleDark = () => setIsDarkMode(prev => !prev);
+  const toggleDark = () => {
+    setIsDarkMode(prev => {
+        const newValue = !prev;
+        localStorage.setItem('oxo_dark_mode', newValue);
+        return newValue;
+    });
+  };
   const toggleLayout = () => setIsSkinnyMode(prev => !prev);
 
   return (
@@ -66,7 +83,7 @@ function App() {
       <div className="main-deck">
         <DeckLeft
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={(tab) => { setActiveTab(tab); setEngineActiveTab(tab); }}
           initMidi={initMidi}
           engineRef={engineRef}
           bpm={bpm} setEngineBPM={setEngineBPM}
@@ -83,6 +100,8 @@ function App() {
           handleInject={handleInject}
           stopSequencer={stopSequencer}
           clearCurrentPadPattern={clearCurrentPadPattern}
+          loadPadPattern={loadPadPattern}
+          loadKit={loadKit}
           activeGroup={activeGroup}
           selectedPad={selectedPad}
           projectData={projectData}
