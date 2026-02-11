@@ -210,7 +210,7 @@ export class SequencerEngine {
             }
 
             const m = await navigator.requestMIDIAccess({ sysex: false });
-            
+
             // --- INPUT SETUP ---
             const inputs = Array.from(m.inputs.values());
             console.log("MIDI Inputs Found:", inputs.map(i => i.name));
@@ -226,7 +226,7 @@ export class SequencerEngine {
             // --- OUTPUT SETUP ---
             const outs = Array.from(m.outputs.values());
             console.log("MIDI Outputs Found:", outs.map(o => o.name));
-            
+
             if (outs.length === 0) {
                 this.log("READY (AUDIO ONLY - NO OUTPUTS)");
                 return true;
@@ -266,7 +266,7 @@ export class SequencerEngine {
 
     handleMidiMessage(event) {
         const [status, data1, data2] = event.data;
-        
+
         if (status >= 240) return;
 
         if (Tone.context.state !== 'running') {
