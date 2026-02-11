@@ -189,11 +189,7 @@ export class SequencerEngine {
         // 1. Audio Context Initialization
         try {
             console.log("--- AUDIO INITIALIZATION START ---");
-            // Set lookAhead to 0 for immediate scheduling (low latency)
-            // Note: latencyHint cannot be reliably changed on an existing AudioContext in all browsers without recreating it.
-            // We rely on the browser's default or Tone's default.
-            Tone.context.lookAhead = 0; 
-
+            Tone.context.lookAhead = 0;
             if (Tone.context.state !== 'running') {
                 await Tone.start();
             }
@@ -202,16 +198,14 @@ export class SequencerEngine {
         } catch (e) {
             this.log(`AUDIO ERR: ${e.message}`);
             console.error("Audio Init Error:", e);
-            // We continue even if audio fails, to try MIDI? No, usually audio is needed for timing.
-            // But let's proceed to MIDI anyway.
         }
 
         // 2. MIDI Initialization
         try {
             console.log("--- MIDI INITIALIZATION START ---");
             if (!navigator.requestMIDIAccess) {
-                this.log("OFFLINE: NO WEB MIDI");
-                console.warn("Web MIDI API not supported.");
+                this.log("READY (AUDIO ONLY - NO BROWSER MIDI)");
+                console.warn("Web MIDI API not supported in this browser.");
                 return true;
             }
 
@@ -234,8 +228,8 @@ export class SequencerEngine {
             console.log("MIDI Outputs Found:", outs.map(o => o.name));
             
             if (outs.length === 0) {
-                 this.log("OFFLINE: NO MIDI OUTS");
-                 return true;
+                this.log("READY (AUDIO ONLY - NO OUTPUTS)");
+                return true;
             }
 
             // Prefer Teenage Engineering (and EP-style) devices for MIDI out
@@ -255,10 +249,9 @@ export class SequencerEngine {
             if (this.midiOut) {
                 this.log(`LINKED: ${this.midiOut.name}`);
                 console.log("Selected MIDI Output:", this.midiOut.name);
-                // Send stop to reset
                 try {
-                    this.midiOut.send([0xFC]); 
-                } catch(err) {
+                    this.midiOut.send([0xFC]);
+                } catch (err) {
                     console.warn("Failed to send initial stop:", err);
                 }
             }
@@ -267,15 +260,13 @@ export class SequencerEngine {
         } catch (e) {
             this.log(`MIDI ERR: ${e.message}`);
             console.error("MIDI Init Error:", e);
-            return false; // Return false to indicate partial/full failure
+            return false;
         }
     }
 
     handleMidiMessage(event) {
         const [status, data1, data2] = event.data;
         
-        // IGNORE SYSTEM REALTIME MESSAGES (Clock 248, Active Sensing 254, etc.)
-        // These will spam the console and aren't needed for notes/CC.
         if (status >= 240) return;
 
         if (Tone.context.state !== 'running') {
@@ -284,29 +275,22 @@ export class SequencerEngine {
         }
 
         const command = status & 0xF0;
-        
-        // Debug Log for Voice/Control MIDI only
-        // console.log(`MIDI RX: [${status}, ${data1}, ${data2}] | CMD: ${command}`);
 
-        // Only trigger Synth if we are in Synth Mode
         if (this.activeTab !== 'synth') return;
 
         if (command === 144 && data2 > 0) {
             const freq = 440 * Math.pow(2, (data1 - 69) / 12);
-            // console.log(`NOTE ON: ${data1} | Freq: ${freq.toFixed(2)}Hz | Vel: ${data2}`);
             this.internalSynth.play(freq);
         } else if (command === 128 || (command === 144 && data2 === 0)) {
             const freq = 440 * Math.pow(2, (data1 - 69) / 12);
-            // console.log(`NOTE OFF: ${data1}`);
             this.internalSynth.stop(freq);
         } else if (command === 176) {
-            console.log(`CC CHANGE: CC#${data1} Value: ${data2}`);
             if (data1 === 74) {
                 const val = 50 + ((data2 / 127) * 9950);
                 const el = document.getElementById('syn-cutoff');
                 if (el) el.value = val;
                 if (this.internalSynth && this.internalSynth.synth) {
-                     this.internalSynth.synth.set({
+                    this.internalSynth.synth.set({
                         filter: { frequency: val },
                         filterEnvelope: { baseFrequency: val }
                     });
