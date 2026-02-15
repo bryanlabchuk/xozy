@@ -1,16 +1,83 @@
-# React + Vite
+# XOZY-EP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based, hardware-inspired 4-track MIDI sequencer and synthesizer. Works with Teenage Engineering EP-series, **OP-Z**, KO II, and other MIDI devices.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+Then open [http://localhost:5173](http://localhost:5173), click **INITIALIZE MIDI** (browser will request MIDI access), connect your device via USB, and start sequencing.
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+## Supported Devices
 
-## Expanding the ESLint configuration
+XOZY auto-detects and prefers Teenage Engineering hardware when multiple MIDI outputs are available:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **EP-133 KO II** • EP-1 • EP-133
+- **OP-Z** • OP-1 • OP-2 • TX-6
+- Pocket Operators (when connected via MIDI)
+
+Standard USB MIDI devices work as well—if only one output exists, it will be used automatically.
+
+---
+
+## OP-Z Setup Guide
+
+Use these steps so your friend can run XOZY with their OP-Z.
+
+### 1. Connect the OP-Z
+
+- Connect the OP-Z to your computer via **USB-C** (or USB-C to USB-A cable)
+- The OP-Z appears as a class-compliant USB MIDI device (e.g. "OP-Z" or "Synthesizer - OPZ")
+
+### 2. Enable MIDI on the OP-Z
+
+Press and hold **Tempo** + **Screen**, then press:
+
+| Key | Setting | Required |
+|-----|---------|----------|
+| 2 | Incoming MIDI | ✅ On |
+| 4 | MIDI Clock In | ✅ On |
+| 1 | Channel 1 to active | ❌ **Off** (so each track gets its own channel) |
+
+For multi-track sequencing, **Channel 1 to active** should be **off**. Otherwise all notes would go to the currently selected track.
+
+### 3. Channel Mapping
+
+XOZY sends on **4 MIDI channels** (1–4):
+
+- **Group 0** → MIDI Channel 1 → OP-Z Track 1  
+- **Group 1** → MIDI Channel 2 → OP-Z Track 2  
+- **Group 2** → MIDI Channel 3 → OP-Z Track 3  
+- **Group 3** → MIDI Channel 4 → OP-Z Track 4  
+
+On the OP-Z, assign Tracks 1–4 to receive on channels 1–4: hold **Tempo** + **Screen**, then hold the track key (1–4) for ~1 second and turn the green dial to set channel 1–4.
+
+### 4. Automation / CC (Optional)
+
+XOZY can send CC automation per step. The OP-Z uses these per-track CCs:
+
+- **CC 3** – Filter Cutoff  
+- **CC 4** – Filter Resonance  
+- **CC 16** – Volume  
+
+In the **Performance** tab, set **Auto Target CC** to `3` for filter cutoff modulation on the OP-Z.
+
+### 5. Run XOZY
+
+```bash
+npm run dev
+```
+
+Then in the browser: **INITIALIZE MIDI** → choose the OP-Z when prompted → start sequencing.
+
+---
+
+## Build & Scripts
+
+- `npm run dev` – Start dev server
+- `npm run build` – Production build
+- `npm run preview` – Preview production build
+- `npm run lint` – Run ESLint

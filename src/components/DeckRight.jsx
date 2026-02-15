@@ -6,6 +6,8 @@ function DeckRight({
   handleInject, 
   stopSequencer, 
   clearCurrentPadPattern, 
+  loadPadPattern,
+  loadKit,
   activeGroup, 
   selectedPad, 
   projectData, 
@@ -24,6 +26,8 @@ function DeckRight({
         projectData={projectData}
         updatePadStep={updatePadStep}
         clearCurrentPadPattern={clearCurrentPadPattern}
+        loadPadPattern={loadPadPattern}
+        loadKit={loadKit}
         current16thNote={current16thNote}
       />
 
@@ -38,6 +42,7 @@ function DeckRight({
         <button 
           onClick={stopSequencer} 
           className={`${btnBase} bg-[#333] text-white`}
+          id="stop-btn"
         >
           STOP / PANIC
         </button>

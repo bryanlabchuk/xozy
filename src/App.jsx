@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 import Header from './components/Header.jsx';
 import LCD from './components/LCD.jsx';
 import DeckLeft from './components/DeckLeft.jsx';
@@ -22,45 +23,50 @@ function App() {
     globalBars, setEngineGlobalBars,
     activeGroup, setEngineActiveGroup,
     selectedPad, setEngineSelectedPad,
+    setEngineActiveTab,
     current16thNote,
     projectData,
     updatePadData,
     updatePadStep,
     clearCurrentPadPattern,
+    loadPadPattern,
+    loadKit,
     logMessages,
   } = useSequencer();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('oxo_theme') || 'auto';
-    setCurrentTheme(savedTheme);
-    applyThemeToBody(savedTheme);
-    if (document.body.classList.contains('dark-mode')) {
-      setIsDarkMode(true);
-    }
-  }, []);
+    // 1. Get Base Class (Theme)
+    const baseClass = (currentTheme !== 'auto') ? `theme-${currentTheme}` : '';
+    
+    // 2. Set Body Class (Overwrites existing to ensure clean state)
+    document.body.className = baseClass;
 
-  useEffect(() => {
-    applyThemeToBody(currentTheme);
-  }, [currentTheme]);
-
-  useEffect(() => {
+    // 3. Append Dark Mode if active
     if (isDarkMode) {
       document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
     }
-  }, [isDarkMode]);
+  }, [currentTheme, isDarkMode]);
 
-  const applyThemeToBody = (theme) => {
-    document.body.className = (theme !== 'auto') ? `theme-${theme}` : '';
-  };
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('oxo_theme') || 'auto';
+    const savedDark = localStorage.getItem('oxo_dark_mode') === 'true';
+    
+    setCurrentTheme(savedTheme);
+    setIsDarkMode(savedDark);
+  }, []);
 
   const setThemeOverride = (value) => {
     localStorage.setItem('oxo_theme', value);
     setCurrentTheme(value);
   };
 
-  const toggleDark = () => setIsDarkMode(prev => !prev);
+  const toggleDark = () => {
+    setIsDarkMode(prev => {
+        const newValue = !prev;
+        localStorage.setItem('oxo_dark_mode', newValue);
+        return newValue;
+    });
+  };
   const toggleLayout = () => setIsSkinnyMode(prev => !prev);
 
   return (
@@ -77,7 +83,7 @@ function App() {
       <div className="main-deck">
         <DeckLeft
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={(tab) => { setActiveTab(tab); setEngineActiveTab(tab); }}
           initMidi={initMidi}
           engineRef={engineRef}
           bpm={bpm} setEngineBPM={setEngineBPM}
@@ -94,6 +100,8 @@ function App() {
           handleInject={handleInject}
           stopSequencer={stopSequencer}
           clearCurrentPadPattern={clearCurrentPadPattern}
+          loadPadPattern={loadPadPattern}
+          loadKit={loadKit}
           activeGroup={activeGroup}
           selectedPad={selectedPad}
           projectData={projectData}

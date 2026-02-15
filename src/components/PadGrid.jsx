@@ -30,11 +30,9 @@ function PadGrid({ engineRef, activeGroup, selectedPad, setEngineSelectedPad, pr
         engineRef.current.midiOut.send([0x80 + chan, pad.midiNote, 0], performance.now() + pad.gateMs);
       }
     }
-    if (engineRef.current.internalSynth) {
-        const freq = 440 * Math.pow(2, (pad.midiNote - 69) / 12);
-        engineRef.current.internalSynth.play(freq);
-        setTimeout(() => engineRef.current.internalSynth.stop(freq), pad.gateMs);
-    }
+    
+    // Internal Audio Preview for Pads is DISABLED per user requirement.
+    // Pads only send MIDI data to the external device.
   };
 
   return (
@@ -44,7 +42,8 @@ function PadGrid({ engineRef, activeGroup, selectedPad, setEngineSelectedPad, pr
           key={idx}
           className={`
             bg-black/5 border-2 border-[var(--border)] aspect-[4/3] rounded-md cursor-pointer relative
-            ${idx === selectedPad ? '!border-[var(--accent)] !bg-[var(--accent)] text-white' : ''}
+            shadow-sm active:shadow-inner hover:bg-black/10 transition-all duration-75
+            ${idx === selectedPad ? '!border-[var(--accent)] !bg-[var(--accent)] text-white shadow-[0_0_10px_var(--accent)]' : ''}
           `}
           id={`pad-${idx}`}
           onClick={() => selectPad(idx)}

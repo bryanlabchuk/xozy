@@ -64,8 +64,8 @@ function PadPerformanceControls({ engineRef, activeGroup, selectedPad, projectDa
             </select>
         </div>
         <div>
-            <label className={labelClass}>CC (AUTO)</label>
-            <input type="number" className={inputClass} id="pad-auto-cc" value={currentPad.autoTargetCC} onChange={handleAutoCCChange} />
+            <label className={labelClass} title="OP-Z: 3=filter, 4=resonance, 16=vol. EP/others: 74=common cutoff.">CC (AUTO)</label>
+            <input type="number" className={inputClass} id="pad-auto-cc" value={currentPad.autoTargetCC} onChange={handleAutoCCChange} min={0} max={127} title="OP-Z: use 3 for filter cutoff" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-[10px] mt-[10px]">

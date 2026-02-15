@@ -62,7 +62,7 @@ function SynthTabContent({ engineRef }) {
         }
 
         return (
-            <div className="relative w-[1000px] h-[160px]">
+            <div className="relative min-w-[1000px] h-[160px]">
                 <div className="absolute inset-0 flex px-[2px]">
                     {whites}
                 </div>

@@ -22,6 +22,31 @@ function ChordTabContent({ engineRef, activeGroup, selectedPad, projectData, upd
       updateChord('root', noteIndex);
   };
 
+  const handleKeyClick = (noteIndex) => {
+      // 1. Update State
+      setRoot(noteIndex);
+      
+      // 2. Trigger Preview (Send MIDI to device)
+      if (engineRef.current) {
+          // Create a temp pad object with the NEW root so we hear the change immediately
+          const tempPad = {
+              ...currentPad,
+              chord: {
+                  ...currentPad.chord,
+                  root: noteIndex
+              }
+          };
+          
+          const chan = activeGroup;
+          const vel = 110;
+          const noteOn = 0x90 + chan;
+          const noteOff = 0x80 + chan;
+          const now = performance.now();
+          
+          engineRef.current.triggerChord(tempPad, chan, vel, noteOn, noteOff, now);
+      }
+  };
+
   const renderPianoKeys = () => {
       const whites = [0, 2, 4, 5, 7, 9, 11];
       const blacks = [1, 3, 6, 8, 10];
@@ -37,7 +62,7 @@ function ChordTabContent({ engineRef, activeGroup, selectedPad, projectData, upd
                             flex-1 border-2 border-[var(--border)] cursor-pointer rounded-full transition-colors duration-100
                             ${chordData.root === note ? '!bg-[var(--accent)]' : 'bg-[var(--key-white)] active:bg-[#ddd]'}
                         `} 
-                        onMouseDown={() => setRoot(note)}
+                        onMouseDown={() => handleKeyClick(note)}
                       ></div>
                   ))}
               </div>
@@ -51,7 +76,7 @@ function ChordTabContent({ engineRef, activeGroup, selectedPad, projectData, upd
                             ${chordData.root === note ? '!bg-[var(--accent)] border-white' : ''}
                         `} 
                         style={{ left: blackPositions[note] }} 
-                        onMouseDown={() => setRoot(note)}
+                        onMouseDown={() => handleKeyClick(note)}
                       ></div>
                   ))}
               </div>

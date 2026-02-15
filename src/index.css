@@ -54,6 +54,18 @@ body.theme-1320 {
   --panel-bg: #e6d9ad; 
 }
 
+body.theme-opz { 
+  --bg: linear-gradient(180deg, #f5f5f0 0%, #e8e8e0 50%, #f0ede6 100%);
+  --accent: #e6a800;
+  --ghost: rgba(230, 168, 0, 0.35);
+  --text: #1c1c1c;
+  --lcd-bg: #0f0f0f;
+  --lcd-text: #ffcc00;
+  --border: #c0bfb8;
+  --panel-bg: rgba(255, 255, 255, 0.7);
+  --shadow: rgba(0, 0, 0, 0.15);
+}
+
 body.dark-mode {
   --bg: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
   --text: #e0e0e0; 
