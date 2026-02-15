@@ -16,7 +16,7 @@ function EditorPanel({
     const [showBrowser, setShowBrowser] = useState(false);
 
     // Shared styles
-    const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-80";
+    const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-95";
 
     return (
         <div className="bg-black/5 border-2 border-[var(--border)] p-5 rounded-lg flex-grow relative overflow-hidden">

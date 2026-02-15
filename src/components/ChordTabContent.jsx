@@ -85,7 +85,7 @@ function ChordTabContent({ engineRef, activeGroup, selectedPad, projectData, upd
   };
 
   // Styles
-  const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-80";
+  const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-95";
   const selectClass = "w-full p-2 bg-[var(--bg)] border border-[var(--text)] text-[var(--text)] font-bold text-xs rounded-sm";
   const knobClass = "appearance-none w-full h-1 bg-[var(--text)] outline-none rounded-sm mt-[5px]";
   const octBtnClass = "bg-[#555] text-white border-none p-2 text-xs font-bold cursor-pointer rounded-sm w-8";

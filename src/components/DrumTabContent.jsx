@@ -21,7 +21,7 @@ function DrumTabContent({
   // Styles
   const controlGroupClass = "bg-black/5 p-[15px] rounded-lg border border-[var(--border)] mb-5";
   const gridClass = "grid grid-cols-2 gap-[15px] items-end";
-  const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-80";
+  const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-95";
   const inputClass = "w-full p-2 bg-[var(--bg)] border border-[var(--text)] text-[var(--text)] font-bold text-xs rounded-sm box-border";
   const knobClass = "appearance-none w-full h-1 bg-[var(--text)] outline-none rounded-sm mt-[5px]";
 

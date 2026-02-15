@@ -22,7 +22,7 @@ function StepSequencerGrid({ projectData, activeGroup, selectedPad, updatePadSte
         const isCurrentStep = (current16thNote % FIXED_STEPS) === i;
         
         let baseClass = "aspect-square border-2 flex items-center justify-center text-xs cursor-pointer font-black rounded-[3px]";
-        let stateClass = "border-[var(--text)] opacity-40"; // Default 'O' state
+        let stateClass = "border-[var(--text)] opacity-75 bg-black/5"; // Default 'O' state
 
         if (val === 'X') {
             stateClass = "bg-[var(--accent)] text-white border-[var(--accent)] opacity-100";

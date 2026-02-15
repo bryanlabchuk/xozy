@@ -2,7 +2,7 @@ import React from 'react';
 
 function Header({ currentTheme, setThemeOverride, toggleDark, toggleLayout }) {
   // Common styles for the select and buttons in the header
-  const btnBaseClass = "p-2 bg-[var(--bg)] border border-[var(--text)] text-[var(--text)] font-bold text-[0.7rem] rounded-[2px] cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap overflow-hidden text-ellipsis";
+  const btnBaseClass = "p-2 bg-[var(--bg)] border border-[var(--text)] text-[var(--text)] font-bold text-[0.7rem] rounded-[2px] cursor-pointer hover:brightness-110 transition-all whitespace-nowrap overflow-hidden text-ellipsis";
 
   return (
     <div className="flex flex-wrap justify-between items-center mb-5 gap-4">
