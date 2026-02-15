@@ -41,15 +41,15 @@ function PadGrid({ engineRef, activeGroup, selectedPad, setEngineSelectedPad, pr
         <div
           key={idx}
           className={`
-            bg-black/5 border-2 border-[var(--border)] aspect-[4/3] rounded-md cursor-pointer relative
-            shadow-sm active:shadow-inner hover:bg-black/10 transition-all duration-75
+            pad-cell bg-black/10 border-2 border-[var(--border)] aspect-[4/3] rounded-md cursor-pointer relative
+            shadow-sm active:shadow-inner hover:bg-black/20 transition-all duration-75
             ${idx === selectedPad ? '!border-[var(--accent)] !bg-[var(--accent)] text-white shadow-[0_0_10px_var(--accent)]' : ''}
           `}
           id={`pad-${idx}`}
           onClick={() => selectPad(idx)}
           onMouseDown={(e) => { if (e.button === 0) triggerLivePad(idx); }}
         >
-          <div className="absolute top-1 right-[6px] font-black text-[0.65rem] opacity-50">
+          <div className="absolute top-1 right-[6px] font-black text-[0.65rem] opacity-90">
             {legends[idx]}
           </div>
         </div>

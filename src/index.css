@@ -14,7 +14,7 @@
   --lcd-bg: #080a08;
   --lcd-text: #39ff14;
   --border: #8e8e8e;
-  --panel-bg: rgba(255, 255, 255, 0.45);
+  --panel-bg: rgba(255, 255, 255, 0.9);
   --shadow: rgba(0,0,0,0.4);
   --fader-track: #ccc;
   --key-white: #f0f0f0;
@@ -62,7 +62,7 @@ body.theme-opz {
   --lcd-bg: #0f0f0f;
   --lcd-text: #ffcc00;
   --border: #c0bfb8;
-  --panel-bg: rgba(255, 255, 255, 0.7);
+  --panel-bg: rgba(255, 255, 255, 0.92);
   --shadow: rgba(0, 0, 0, 0.15);
 }
 
@@ -124,4 +124,30 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* --- OP-Z Angled Accents (subtle, EP-compatible) --- */
+/* Diagonal accent strip - OP-Z silhouette nod */
+.chassis::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent));
+  opacity: 0.45;
+  transform: rotate(-45deg) translate(21px, -21px);
+  pointer-events: none;
+}
+
+/* Slight angular skew on main title */
+.chassis h1 {
+  transform: skewX(-1.5deg);
+  display: inline-block;
+}
+
+/* Chamfered corner on pads - OP-Z bevel nod */
+.pad-cell {
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%, 0 0);
 }

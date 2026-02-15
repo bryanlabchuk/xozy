@@ -6,7 +6,7 @@ function TabNavigation({ activeTab, setActiveTab }) {
     py-2 px-4 text-xs uppercase transition-opacity duration-200
     ${activeTab === tabName 
       ? 'opacity-100 text-[var(--accent)] border-b-[3px] border-[var(--accent)]' 
-      : 'opacity-40 hover:opacity-70'}
+      : 'opacity-75 hover:opacity-95'}
   `;
 
   return (

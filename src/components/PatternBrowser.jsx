@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
-import { GENRES, INSTRUMENT_TYPES, PAD_MAPPING, getPatternList } from '../data/patternLibrary';
+import { GENRES, INSTRUMENT_TYPES, PAD_MAPPING, getPatternList, FULL_KITS } from '../data/patternLibrary';
+
+// Mini pattern visualization (X=accent, Y/Z=mid, O=rest)
+function PatternPreview({ pat }) {
+  const clean = (pat || '').replace(/\s/g, '');
+  if (!clean) return null;
+  return (
+    <div className="flex gap-0.5 flex-wrap" style={{ maxWidth: 80 }}>
+      {clean.slice(0, 16).split('').map((c, i) => (
+        <span
+          key={i}
+          className={`w-1 h-2 rounded-sm ${c === 'O' || c === '.' ? 'bg-[var(--border)] opacity-60' : c === 'X' ? 'bg-[var(--accent)]' : 'bg-[var(--text)] opacity-85'}`}
+          title={c}
+        />
+      ))}
+    </div>
+  );
+}
 
 function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onClose }) {
   const [activeTab, setActiveTab] = useState('single'); 
@@ -9,6 +26,11 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
 
   const handlePatternClick = (pat) => {
     loadPadPattern(activeGroup, selectedPad, pat.pat);
+  };
+
+  const handleKitClick = (kit) => {
+    loadKit({ name: kit.name, tracks: kit.tracks });
+    onClose();
   };
 
   const handleGenerateKit = () => {
@@ -33,7 +55,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
             <div className="flex flex-col gap-3 shrink-0">
                 {/* Genre Row */}
                 <div>
-                    <div className="text-[0.6rem] font-bold opacity-60 mb-1 uppercase tracking-wider text-[var(--text)]">Genre</div>
+                    <div className="text-[0.6rem] font-bold mb-1 uppercase tracking-wider text-[var(--text)]">Genre</div>
                     <div className="flex flex-wrap gap-2">
                         {GENRES.map(g => (
                             <button 
@@ -43,7 +65,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
                                     px-3 py-1.5 text-[0.7rem] font-bold rounded-sm border transition-all
                                     ${selectedGenre === g 
                                         ? 'bg-[var(--accent)] text-white border-[var(--accent)]' 
-                                        : 'bg-transparent text-[var(--text)] border-[var(--text)] opacity-60 hover:opacity-100'}
+                                        : 'bg-transparent text-[var(--text)] border-[var(--text)] opacity-100'}
                                 `}
                             >
                                 {g.toUpperCase()}
@@ -54,7 +76,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
 
                 {/* Instrument Row */}
                 <div>
-                    <div className="text-[0.6rem] font-bold opacity-60 mb-1 uppercase tracking-wider text-[var(--text)]">Instrument</div>
+                    <div className="text-[0.6rem] font-bold mb-1 uppercase tracking-wider text-[var(--text)]">Instrument</div>
                     <div className="flex flex-wrap gap-2">
                         {INSTRUMENT_TYPES.map(inst => (
                             <button
@@ -64,7 +86,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
                                     px-3 py-1.5 text-[0.7rem] font-bold rounded-sm border transition-all
                                     ${selectedInstrument === inst 
                                         ? 'bg-[var(--text)] text-[var(--bg)] border-[var(--text)]' 
-                                        : 'bg-transparent text-[var(--text)] border-[var(--text)] opacity-60 hover:opacity-100'}
+                                        : 'bg-transparent text-[var(--text)] border-[var(--text)] opacity-100'}
                                 `}
                             >
                                 {inst.toUpperCase()}
@@ -82,18 +104,41 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
                             <button 
                                 key={i} 
                                 onClick={() => handlePatternClick(p)}
-                                className="p-3 bg-[var(--panel-bg)] hover:bg-[var(--accent)] hover:text-white text-[var(--text)] text-left text-xs font-mono border border-[var(--border)] rounded-sm shadow-sm transition-colors"
+                                className="p-3 bg-[var(--panel-bg)] hover:bg-[var(--accent)] hover:text-white text-[var(--text)] text-left text-xs font-mono border border-[var(--border)] rounded-sm shadow-sm transition-colors flex flex-col gap-1.5"
                             >
-                                {p.name}
+                                <span>{p.name}</span>
+                                <PatternPreview pat={p.pat} />
                             </button>
                         ))
                     ) : (
-                        <div className="col-span-2 text-center p-8 opacity-50 text-xs text-[var(--text)]">
+                        <div className="col-span-2 text-center p-8 opacity-80 text-xs text-[var(--text)]">
                             No patterns found for {selectedGenre} / {selectedInstrument}
                         </div>
                     )}
                  </div>
             </div>
+          </div>
+      );
+  };
+
+  const renderFullKits = () => {
+      return (
+          <div className="flex flex-col gap-4 h-full">
+              <p className="text-[0.65rem] opacity-90 text-[var(--text)]">
+                  One-click full drum kits. Loads patterns to all pads for the current track group.
+              </p>
+              <div className="flex-1 overflow-y-auto min-h-0 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {FULL_KITS.map((kit, i) => (
+                      <button
+                          key={i}
+                          onClick={() => handleKitClick(kit)}
+                          className="p-4 bg-[var(--panel-bg)] hover:bg-[var(--accent)] hover:text-white text-[var(--text)] border border-[var(--border)] rounded-sm text-left transition-colors flex flex-col gap-1"
+                      >
+                          <span className="font-bold text-sm">{kit.name}</span>
+                          <span className="text-[0.6rem] opacity-90 uppercase tracking-wider">{kit.genre}</span>
+                      </button>
+                  ))}
+              </div>
           </div>
       );
   };
@@ -114,7 +159,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
                             p-4 text-xs font-bold rounded border-2 transition-all
                             ${genGenre === g 
                                 ? 'bg-[var(--magic)] text-white border-white scale-105 shadow-md' 
-                                : 'bg-transparent text-[var(--text)] border-[var(--text)] opacity-70 hover:opacity-100'}
+                                : 'bg-transparent text-[var(--text)] border-[var(--text)] opacity-85 hover:opacity-100'}
                         `}
                     >
                         {g}
@@ -129,7 +174,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
                   GENERATE KIT
               </button>
               
-              <p className="text-[0.65rem] mt-6 opacity-60 text-[var(--text)] max-w-[300px] text-center">
+              <p className="text-[0.65rem] mt-6 opacity-90 text-[var(--text)] max-w-[300px] text-center">
                   Generates a full 12-pad kit using random patterns from the selected genre.
               </p>
           </div>
@@ -154,17 +199,28 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex gap-4 px-5 pt-3 shrink-0 border-b border-[var(--border)] bg-[var(--bg)]">
+            <div className="flex gap-4 px-5 pt-3 shrink-0 border-b border-[var(--border)] bg-[var(--bg)] flex-wrap">
                 <button 
                     onClick={() => setActiveTab('single')}
                     className={`
                         pb-2 font-black text-[0.7rem] tracking-wider transition-all border-b-4 uppercase
                         ${activeTab === 'single' 
                             ? 'border-[var(--accent)] text-[var(--text)] opacity-100' 
-                            : 'border-transparent text-[var(--text)] opacity-40 hover:opacity-80'}
+                            : 'border-transparent text-[var(--text)] opacity-75 hover:opacity-95'}
                     `} 
                 >
                     Browse Patterns
+                </button>
+                <button 
+                    onClick={() => setActiveTab('kits')}
+                    className={`
+                        pb-2 font-black text-[0.7rem] tracking-wider transition-all border-b-4 uppercase
+                        ${activeTab === 'kits' 
+                            ? 'border-[var(--accent)] text-[var(--text)] opacity-100' 
+                            : 'border-transparent text-[var(--text)] opacity-75 hover:opacity-95'}
+                    `} 
+                >
+                    Full Kits
                 </button>
                 <button 
                     onClick={() => setActiveTab('generator')}
@@ -172,7 +228,7 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
                         pb-2 font-black text-[0.7rem] tracking-wider transition-all border-b-4 uppercase
                         ${activeTab === 'generator' 
                             ? 'border-[var(--magic)] text-[var(--text)] opacity-100' 
-                            : 'border-transparent text-[var(--text)] opacity-40 hover:opacity-80'}
+                            : 'border-transparent text-[var(--text)] opacity-75 hover:opacity-95'}
                     `} 
                 >
                     Kit Generator
@@ -180,8 +236,10 @@ function PatternBrowser({ activeGroup, selectedPad, loadPadPattern, loadKit, onC
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto p-5 bg-[var(--bg)]">
-                {activeTab === 'single' ? renderSinglePatterns() : renderGenerator()}
+            <div className="flex-1 overflow-y-auto p-5 bg-[var(--bg)] min-h-0">
+                {activeTab === 'single' && renderSinglePatterns()}
+                {activeTab === 'kits' && renderFullKits()}
+                {activeTab === 'generator' && renderGenerator()}
             </div>
         </div>
     </div>

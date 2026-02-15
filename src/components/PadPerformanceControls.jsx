@@ -31,7 +31,7 @@ function PadPerformanceControls({ engineRef, activeGroup, selectedPad, projectDa
   };
 
   // Styles
-  const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-80";
+  const labelClass = "text-[0.55rem] font-extrabold uppercase mb-[6px] block tracking-[1px] opacity-95";
   const inputClass = "w-full p-2 bg-[var(--bg)] border border-[var(--text)] text-[var(--text)] font-bold text-xs rounded-sm box-border";
   const btnSmallClass = "bg-[#555] text-white border-none p-[10px] text-[0.65rem] cursor-pointer rounded-sm font-bold w-full";
   const btnToggleOnClass = "!bg-[var(--lcd-text)] !text-black";
