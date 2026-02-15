@@ -235,6 +235,7 @@ export class SequencerEngine {
             // Prefer Teenage Engineering (and EP-style) devices for MIDI out
             const TE_DEVICE_PATTERNS = [
                 'teenage', 'ep-', 'ep133', 'op-', 'op-1', 'op-2', 'op-z', 'opz', 'op-133',
+                'op-z lab',      // OP-Z Lab app / USB connection variants
                 'tx-6', 'tx6',   // TE mixer
                 'po-', 'po-32', 'po-33', 'po-35',  // Pocket Operators (if they expose MIDI)
                 'ko ii', 'ko2',  // EP-133 KO II

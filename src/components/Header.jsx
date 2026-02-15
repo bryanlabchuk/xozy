@@ -20,6 +20,7 @@ function Header({ currentTheme, setThemeOverride, toggleDark, toggleLayout }) {
           <option value="40">THEME: 40</option>
           <option value="133">THEME: 133</option>
           <option value="1320">THEME: 1320</option>
+          <option value="opz">THEME: OP-Z</option>
         </select>
         <button 
           id="dark-btn" 
